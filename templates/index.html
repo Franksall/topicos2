@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compresor LZ77</title>
+    <link rel="stylesheet" href="/static/style.css"> <!-- Archivo CSS opcional -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    
+    <h1>Compresor LZ77</h1>
+    <h2>Comprimir Mensaje</h2>
+    <form id="compress-form">
+        <textarea id="message" rows="4" cols="50" placeholder="Ingresa el mensaje a comprimir..."></textarea><br>
+        <input type="number" id="buffer_size" placeholder="Tamaño del buffer" required>
+        <input type="number" id="dictionary_size" placeholder="Tamaño del diccionario" required>
+        <button type="submit">Comprimir</button>
+        
+    </form>
+    <h2>Resultado Comprimido:</h2>
+    <pre id="compressed_result"></pre>
+    <button id="download_compressed" style="display:none;">Descargar Comprimido</button>
+
+    <h2>Descomprimir Mensaje</h2>
+    <form id="decompress-form">
+        <textarea id="compressed" rows="4" cols="50" placeholder="Ingresa el mensaje comprimido..."></textarea><br>
+        <button type="submit">Descomprimir</button>
+    </form>
+    <h2>Resultado Descomprimido:</h2>
+    <pre id="decompressed_result"></pre>
+
+    <script>
+        $('#compress-form').on('submit', function(e) {
+            e.preventDefault();
+            const message = $('#message').val();
+            const buffer_size = $('#buffer_size').val();
+            const dictionary_size = $('#dictionary_size').val();
+
+            $.post('/compress', { message: message, buffer_size: buffer_size, dictionary_size: dictionary_size }, function(data) {
+                $('#compressed_result').text(JSON.stringify(data));
+                $('#download_compressed').show(); // Mostrar botón para descargar
+            });
+        });
+
+        $('#decompress-form').on('submit', function(e) {
+            e.preventDefault();
+            const compressed = $('#compressed').val();
+
+            $.post('/decompress', { compressed: compressed }, function(data) {
+                $('#decompressed_result').text(data);
+            });
+        });
+
+        $('#download_compressed').on('click', function() {
+            const compressedMessage = $('#compressed_result').text();
+            $.post('/download', { compressed_message: compressedMessage }, function(data) {
+                const url = window.URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'compressed_message.txt';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
